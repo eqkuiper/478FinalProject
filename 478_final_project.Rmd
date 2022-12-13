@@ -1,0 +1,26 @@
+---
+title: "478 final project"
+author: "Esmée Q. Kuiper and Cody Quiroz"
+date: "2022-12-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages, include=FALSE}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r load in and clean data, include=FALSE}
+HABS_data <- read_csv("478_LakeErie_data.csv") %>% 
+  mutate(month = months(as.Date(Date, format = "%m/%d/%Y")))
+```
+
+```{r summarize by month}
+HABS_data %>% 
+  filter(month == "May") %>% 
+  may_average <- mean("Total Dissolved Posphorus (ug P/L)"))
+```
