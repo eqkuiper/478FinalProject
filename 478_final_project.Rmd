@@ -12,15 +12,157 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load packages, include=FALSE}
 library(tidyverse)
 library(dplyr)
+library(lubridate)
+library(viridisLite)
+library(knitr)
 ```
 
-```{r load in and clean data, include=FALSE}
+```{r load in and clean data}
 HABS_data <- read_csv("478_LakeErie_data.csv") %>% 
-  mutate(month = months(as.Date(Date, format = "%m/%d/%Y")))
+  mutate(month = months(as.Date(Date, format = "%m/%d/%Y"))) %>% 
+  mutate(year = year(as.Date(Date, format = "%m/%d/%Y"))+2000) %>% 
+  mutate(nit_M = nitrate_nitrite_mgL/(62.0049*1000), 
+                                      total_dissolved_posphorus_M = total_dissolved_posphorus_ugL/(94.9714*1000*1000),
+                                      DOC_M = DOC_mgL/(137.11*1000)) %>% 
+  mutate(date_tidy = as.Date(Date, format = "%m/%d/%y")) 
+
+HABS_data_factored <- HABS_data %>% 
+  mutate(month = factor(month, levels = c("March", "April", "May", "June",
+                        "July", "August", "September", "October", "November"))) %>% 
+  arrange(month)
 ```
 
-```{r summarize by month}
-HABS_data %>% 
-  filter(month == "May") %>% 
-  may_average <- mean("Total Dissolved Posphorus (ug P/L)"))
+```{r summarize by month, echo=FALSE}
+#create new data frame
+HABS_data_month <- HABS_data %>% 
+  group_by(month) %>% 
+  filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0) %>% 
+  summarize(mean_tdp_M = mean(total_dissolved_posphorus_M), 
+            mean_nit_M = mean(nit_M), 
+            mean_DOC_M = mean(DOC_M))
+#create data table
+HABS_data_month_factored <- HABS_data_month %>% 
+  mutate(month = factor(month, levels = c("March", "April", "May", "June",
+                        "July", "August", "September", "October", "November"))) %>% 
+  arrange(month)
+kable(HABS_data_month_factored, col.names = 
+        c("Month", "Mean Total Dissolved Phosphorus (M)", "Mean Nitrate-Nitrite (M)", "Mean DOC (M)"))
 ```
+
+```{r plot tdp data, echo=FALSE}
+HABS_data %>%
+  group_by(year) %>% 
+  filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0) %>%
+  ggplot(aes(x = date_tidy,
+             y = total_dissolved_posphorus_M, 
+             color = year)) +
+    geom_smooth(col = "black") +
+  geom_point() + 
+  scale_color_viridis_b(option = "cividis") + 
+  theme_bw() + 
+  labs(title = "Total Dissolved Phosphorus vs. Time") +
+  xlab("Year") + 
+  ylab("Total Dissolved Phosphorus (M)")
+
+HABS_data_factored %>% 
+  filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0,
+         month == c("June","July","September")) %>% 
+  ggplot(aes(x = as.factor(year), 
+             y = total_dissolved_posphorus_M,
+             color = year)) + 
+  geom_boxplot() +
+  geom_point() +
+  scale_color_viridis_b(option = "cividis") + 
+  theme_bw() + 
+  labs(title = "Total Dissoled Phosphorus vs. Time") +
+  xlab("Year") + 
+  ylab("Total Total Dissolved Phosphorus (M)") +
+  facet_wrap(~month) 
+```
+
+```{r statistical analysis of P}
+phosphorus_anova <- 
+  aov(total_dissolved_posphorus_M ~ year, data = HABS_data_factored, 
+              var.equal = TRUE)
+
+summary(phosphorus_anova)
+```
+
+```{r plot nitrate-nitrite data, echo=FALSE}
+HABS_data %>%
+  group_by(year) %>% 
+  filter(nit_M > 0, nit_M > 0, DOC_M > 0) %>%
+  ggplot(aes(x = date_tidy,
+             y = nit_M, 
+             color = year)) +
+    geom_smooth(col = "black") +
+  geom_point(alpha = 0.5) + 
+  scale_color_viridis_b(option = "cividis") + 
+  theme_bw() + 
+  labs(title = "Total Nitrate-Nitrite vs. Time") +
+  xlab("Year") + 
+  ylab("Total Nitrate-Nitrite (M)")
+
+HABS_data_factored %>% 
+  filter(nit_M > 0, nit_M > 0, DOC_M > 0,
+         month == c("June","July","September")) %>% 
+  ggplot(aes(x = as.factor(year), 
+             y = nit_M,
+             color = year)) + 
+  geom_boxplot() +
+  geom_point() +
+  scale_color_viridis_b(option = "cividis") + 
+  theme_bw() + 
+  labs(title = "Total Dissoled Phosphorus vs. Time") +
+  xlab("Year") + 
+  ylab("Total Dissolved Phosphorus (M)") +
+  facet_wrap(~month) 
+```
+
+```{r statistical analysis of nitrate-nitrite}
+nitrate_anova <- 
+  aov(total_dissolved_posphorus_M ~ year, data = HABS_data_factored, 
+              var.equal = TRUE)
+
+summary(nitrate_anova)
+```
+
+```{r plot DOC data, echo=FALSE}
+HABS_data %>%
+  group_by(year) %>% 
+  filter(nit_M > 0, nit_M > 0, DOC_M > 0) %>%
+  ggplot(aes(x = date_tidy,
+             y = DOC_M, 
+             color = year)) +
+    geom_smooth(col = "black") +
+  geom_point(alpha = 0.5) + 
+  scale_color_viridis_b(option = "cividis") + 
+  theme_bw() + 
+  labs(title = "Total DOC vs. Time") +
+  xlab("Year") + 
+  ylab("Total DOC (M)")
+
+HABS_data_factored %>% 
+  filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0,
+         month == c("June","July","September")) %>% 
+  ggplot(aes(x = as.factor(year), 
+             y = nit_M,
+             color = year)) + 
+  geom_boxplot() +
+  geom_point(alpha = 0.5) +
+  scale_color_viridis_b(option = "cividis") + 
+  theme_bw() + 
+  labs(title = "Total DOC vs. Time") +
+  xlab("Year") + 
+  ylab("Total DOC (M)") + 
+  facet_wrap(~month) 
+```
+
+```{r statistical analysis of DOC}
+DOC_anova <- 
+  aov(DOC_M ~ year + month, data = HABS_data_factored, 
+              var.equal = TRUE)
+
+summary(DOC_anova)
+```
+
