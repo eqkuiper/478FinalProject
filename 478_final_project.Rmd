@@ -23,18 +23,25 @@ library(knitr)
 *First, we read in and clean our data, so that we can more easily analyze it.*
 
 ```{r load in and clean data}
+#read in data
 HABS_data <- read_csv("478_LakeErie_data.csv") %>% 
+  #make a month column
   mutate(month = months(as.Date(Date, format = "%m/%d/%Y"))) %>% 
+  #make a year column
   mutate(year = year(as.Date(Date, format = "%m/%d/%Y"))+2000) %>% 
-  mutate(nit_M = nitrate_nitrite_mgL/(62.0049*1000), 
-                 total_dissolved_posphorus_M = total_dissolved_posphorus_ugL/(94.9714*1000*1000),
-                 DOC_M = DOC_mgL/(137.11*1000)) %>% 
+  mutate(nit_M = nitrate_nitrite_mgL/(62.0049*1000), #converting nitrate to M -> X mg/L * 1 mol/62.0049 g * 1 g/1000 mg
+                 total_dissolved_posphorus_M = total_dissolved_posphorus_ugL/(94.9714*1000*1000), #converting phosphate to M -> 
+                  # X ug/L * 1 mol/94.9714 g * 1 g/1000 mg * 1 mg/1000 ug
+                 DOC_M = DOC_mgL/(137.11*1000)) %>% #converting DOC (proxy = salicylate) to M -> X mg/L * 1 mol/137.11 g * 
+                  # 1 g/1000 mg
+  #making R read the date column as a date
   mutate(date_tidy = as.Date(Date, format = "%m/%d/%y")) 
 ```
 
 *Next, we tell R that we want our months to be in chronological order (rather than alphabetical).*
 
 ```{r months ordering}
+# ordering months chronologically
 HABS_data_factored <- HABS_data %>% 
   mutate(month = factor(month, levels = c("March", "April", "May", "June",
                         "July", "August", "September", "October", "November"))) %>% 
@@ -44,6 +51,7 @@ HABS_data_factored <- HABS_data %>%
 ### Plotting phosphorus data
 
 ```{r plot tdp data}
+# plot phosphorus data over time (2012-2018)
 HABS_data %>%
   group_by(year) %>% 
   filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0) %>%
@@ -58,6 +66,7 @@ HABS_data %>%
   xlab("Year") + 
   ylab("Total Dissolved Phosphorus (M)")
 
+# plot phosphorus data by month
 HABS_data_factored %>% 
   filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0,
          month == c("June","July","September")) %>% 
@@ -74,6 +83,7 @@ HABS_data_factored %>%
   ylab("Total Dissolved Phosphorus (M)") +
   ylim(0, 1.5e-6)
 
+#save boxplot
 ggsave("tdp_month_plot.png",
        height = 4,
        width = 6)
@@ -82,11 +92,13 @@ ggsave("tdp_month_plot.png",
 #### Stastical analysis of phosphorus 
 
 ```{r statistical analysis of P}
+# ANOVA of phosphorus data
 phosphorus_anova <- 
   aov(total_dissolved_posphorus_M ~ month, data = HABS_data_factored)
 
 summary(phosphorus_anova)
 
+# Tukey HSD of phosphorus ANOVA
 phosphorus_tukey <- TukeyHSD(phosphorus_anova)
 
 phosphorus_tukey
@@ -95,6 +107,7 @@ phosphorus_tukey
 ### Plotting nitrate-nitrite data
 
 ```{r plot nitrate-nitrite data}
+# plot nitrate data over time (2012-2018)
 HABS_data %>%
   group_by(year) %>% 
   filter(nit_M > 0, nit_M > 0, DOC_M > 0) %>%
@@ -109,6 +122,7 @@ HABS_data %>%
   xlab("Year") + 
   ylab("Total Nitrate-Nitrite (M)")
 
+# plot nitrate data by month 
 HABS_data_factored %>% 
   filter(nit_M > 0, nit_M > 0, DOC_M > 0,
          month == c("June","July","September")) %>% 
@@ -134,17 +148,20 @@ ggsave("nit_month_plot.png",
 #### Statistical analysis of nitrate-nitrite
 
 ```{r statistical analysis of nitrate-nitrite}
+#nitrate ANOVA
 nitrate_anova <- 
   aov(nit_M ~ month, data = HABS_data_factored)
 
 summary(nitrate_anova)
 
+#Tukey HSD of nitrate ANOVA
 TukeyHSD(nitrate_anova)
 ```
 
 ### Plotting dissolved organic carbon (DOC) data
 
 ```{r plot DOC data}
+# plot DOC data over time (2012-2018)
 HABS_data %>%
   group_by(year) %>% 
   filter(nit_M > 0, nit_M > 0, DOC_M > 0) %>%
@@ -159,6 +176,7 @@ HABS_data %>%
   xlab("Year") + 
   ylab("Total DOC (M)")
 
+# plot DOC data by month
 HABS_data_factored %>% 
   filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0,
          month == c("June","July","September")) %>% 
@@ -175,7 +193,7 @@ HABS_data_factored %>%
   ylab("Total DOC (M)") +
   ylim(0, 6e-5)
 
-
+# save boxplot 
 ggsave("DOC_month_plot.png",
        height = 4,
        width = 6)
@@ -184,11 +202,13 @@ ggsave("DOC_month_plot.png",
 #### Statistical analysis of DOC
 
 ```{r statistical analysis of DOC}
+# ANOVA of DOC data
 DOC_anova <- 
   aov(DOC_M ~ month, data = HABS_data_factored)
 
 summary(DOC_anova)
 
+# Tukey HSD of DOC ANOVA
 TukeyHSD(DOC_anova)
 ```
 
@@ -200,7 +220,9 @@ Next, we summarize key measures by month. We will use these values to create a m
 #create new data frame
 HABS_data_month <- HABS_data %>% 
   group_by(month) %>% 
+  # eliminate any NA/NULL values
   filter(total_dissolved_posphorus_M > 0, nit_M > 0, DOC_M > 0) %>% 
+  # include in the new data frame mean concentrations for each month 
   summarize(mean_tdp_M = mean(total_dissolved_posphorus_M), 
             mean_nit_M = mean(nit_M), 
             mean_DOC_M = mean(DOC_M))
