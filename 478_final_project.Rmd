@@ -69,9 +69,14 @@ HABS_data_factored %>%
              alpha = 0.5) +
   scale_color_viridis_b(option = "cividis") + 
   theme_bw() + 
-  labs(title = "Total Dissoled Phosphorus vs. Time") +
-  xlab("Year") + 
-  ylab("Total Total Dissolved Phosphorus (M)")
+  labs(title = "Total Dissolved Phosphorus vs. Time") +
+  xlab("Month") + 
+  ylab("Total Dissolved Phosphorus (M)") +
+  ylim(0, 1.5e-6)
+
+ggsave("tdp_month_plot.png",
+       height = 4,
+       width = 6)
 ```
 
 #### Stastical analysis of phosphorus 
@@ -81,6 +86,10 @@ phosphorus_anova <-
   aov(total_dissolved_posphorus_M ~ month, data = HABS_data_factored)
 
 summary(phosphorus_anova)
+
+phosphorus_tukey <- TukeyHSD(phosphorus_anova)
+
+phosphorus_tukey
 ```
 
 ### Plotting nitrate-nitrite data
@@ -113,17 +122,24 @@ HABS_data_factored %>%
   theme_bw() + 
   labs(title = "Total Nitrate-Nitrite vs. Time") +
   xlab("Month") + 
-  ylab("Total Nitrate-Nitrite (M)")
+  ylab("Total Nitrate-Nitrite (M)") +
+  ylim(0, 1.5e-4)
 
+#save boxplot
+ggsave("nit_month_plot.png",
+       height = 4,
+       width = 6)
 ```
 
 #### Statistical analysis of nitrate-nitrite
 
 ```{r statistical analysis of nitrate-nitrite}
 nitrate_anova <- 
-  aov(total_dissolved_posphorus_M ~ month + year, data = HABS_data_factored)
+  aov(nit_M ~ month, data = HABS_data_factored)
 
 summary(nitrate_anova)
+
+TukeyHSD(nitrate_anova)
 ```
 
 ### Plotting dissolved organic carbon (DOC) data
@@ -155,17 +171,25 @@ HABS_data_factored %>%
   scale_color_viridis_b(option = "cividis") + 
   theme_bw() + 
   labs(title = "Total DOC vs. Time") +
-  xlab("Year") + 
-  ylab("Total DOC (M)")
+  xlab("Month") + 
+  ylab("Total DOC (M)") +
+  ylim(0, 6e-5)
+
+
+ggsave("DOC_month_plot.png",
+       height = 4,
+       width = 6)
 ```
 
 #### Statistical analysis of DOC
 
 ```{r statistical analysis of DOC}
 DOC_anova <- 
-  aov(DOC_M ~ month + year, data = HABS_data_factored)
+  aov(DOC_M ~ month, data = HABS_data_factored)
 
 summary(DOC_anova)
+
+TukeyHSD(DOC_anova)
 ```
 
 ### Preparing our data for ChemEQL
