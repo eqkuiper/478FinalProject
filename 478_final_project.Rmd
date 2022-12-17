@@ -30,8 +30,7 @@ HABS_data <- read_csv("478_LakeErie_data.csv") %>%
   #make a year column
   mutate(year = year(as.Date(Date, format = "%m/%d/%Y"))+2000) %>% 
   mutate(nit_M = nitrate_nitrite_mgL/(62.0049*1000), #converting nitrate to M -> X mg/L * 1 mol/62.0049 g * 1 g/1000 mg
-                 total_dissolved_posphorus_M = total_dissolved_posphorus_ugL/(94.9714*1000*1000), #converting phosphate to M -> 
-                  # X ug/L * 1 mol/94.9714 g * 1 g/1000 mg * 1 mg/1000 ug
+                 total_dissolved_posphorus_M = total_dissolved_posphorus_ugL/(94.9714*1000*1000), #converting phosphate to M -> X ug/L * 1 mol/94.9714 g * 1 g/1000 mg * 1 mg/1000 ug
                  DOC_M = DOC_mgL/(137.11*1000)) %>% #converting DOC (proxy = salicylate) to M -> X mg/L * 1 mol/137.11 g * 
                   # 1 g/1000 mg
   #making R read the date column as a date
